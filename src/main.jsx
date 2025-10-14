@@ -6,7 +6,8 @@ import './index.css';
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
-    <BrowserRouter>
+    {/* 👇 Add the basename prop here */}
+    <BrowserRouter basename="/AlgoTracker">
       <App />
     </BrowserRouter>
   </React.StrictMode>,
