@@ -1,16 +1,47 @@
-# React + Vite
+# ⚡ AlgoTracker
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+> _Your private, password-protected algorithm mastery companion._
 
-Currently, two official plugins are available:
+AlgoTracker is a secure web app built using **React**, **Vite**, **Tailwind CSS**, and **Firebase**.  
+It provides a modern interface for learning, exploring, and tracking algorithmic progress — all within a **password-protected** environment.  
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+---
 
-## React Compiler
+## 🔒 Access Control
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+This project is **private** and accessible **only with valid credentials**.  
+Authentication and data storage are powered by **Firebase**, ensuring robust security and privacy.
 
-## Expanding the ESLint configuration
+---
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## 🎯 Key Features
+
+✅ **Secure Authentication** – Firebase Auth ensures only authorized users can log in.  
+✅ **Realtime Database** – User progress and algorithm data are stored safely in Firebase Firestore.  
+✅ **Algorithm Dashboard** – Explore categorized algorithm cards with progress indicators.  
+✅ **Learn More Pages** – Deep-dive into each algorithm’s theory and visualization.  
+✅ **Dynamic Quotes** – Motivational programming quotes loaded dynamically.  
+✅ **Responsive UI** – Smooth and adaptable layout for all screen sizes.  
+✅ **Minimalist Theme** – Monochrome (Black • White • Red) inspired by Nothing OS.  
+✅ **Fast Build** – Powered by **Vite** for rapid development and lightning-fast reloads.  
+
+---
+
+## 🧰 Tech Stack
+
+| Technology | Purpose |
+|-------------|----------|
+| ⚛️ **React** | Component-based UI |
+| ⚡ **Vite** | Fast build and dev environment |
+| 🎨 **Tailwind CSS** | Modern utility-first styling |
+| 🔥 **Firebase** | Authentication & Realtime Database |
+| 💾 **Firestore** | Persistent user progress storage |
+| 🧠 **Context API / LocalStorage** | Local state management |
+| 🔐 **Custom Access Logic** | Password and login restrictions |
+
+---
+
+## 📁 Folder Structure (Simplified)
+
+```
+└── 📁algoTracker

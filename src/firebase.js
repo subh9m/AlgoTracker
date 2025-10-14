@@ -1,20 +1,18 @@
 import { initializeApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
 
-// Your web app's Firebase configuration
-// 👇 PASTE THE CONFIG OBJECT YOU COPIED FROM THE FIREBASE CONSOLE HERE
+// The config object now securely reads your keys from the .env file
 const firebaseConfig = {
-  apiKey: "AIzaSyD1ectwVvDkSjfpdfrcIyAxg35dNZHKRIE",
-  authDomain: "algotracker-13423.firebaseapp.com",
-  projectId: "algotracker-13423",
-  storageBucket: "algotracker-13423.firebasestorage.app",
-  messagingSenderId: "795688595305",
-  appId: "1:795688595305:web:fc056af4e01144fc6c97f8",
-  measurementId: "G-SFFJGPS21Q"
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID
 };
 
-// Initialize Firebase
+// Initialize Firebase with the new config
 const app = initializeApp(firebaseConfig);
 
-// Export the Firestore database instance so you can use it in your components
+// Export the Firestore database instance
 export const db = getFirestore(app);
