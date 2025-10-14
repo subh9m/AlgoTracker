@@ -12,8 +12,8 @@ import Footer from './components/Footer';
 import ScrollToTop from './components/ScrollToTop';
 import PasswordScreen from './components/PasswordScreen';
 
-// Set your secret password here.
-const CORRECT_PASSWORD = "gtfocode";
+
+const CORRECT_PASSWORD = import.meta.env.VITE_APP_PASSWORD;
 const AUTH_KEY = 'isAuthenticated';
 
 function App() {
