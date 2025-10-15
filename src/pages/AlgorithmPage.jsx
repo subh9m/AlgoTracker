@@ -3,7 +3,6 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { foundationalAlgos, advancedAlgos } from '../data';
 import { db } from '../firebase';
 import { doc, getDoc, setDoc } from "firebase/firestore";
-
 import Modal from '../components/Modal';
 
 const initialFormState = {
@@ -24,7 +23,6 @@ const AlgorithmPage = () => {
   const [questions, setQuestions] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [status, setStatus] = useState('');
-
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [formData, setFormData] = useState(initialFormState);
   const [modalTitle, setModalTitle] = useState('Add a New Solved Question');
@@ -104,15 +102,16 @@ const AlgorithmPage = () => {
   if (isLoading) {
     return <div className="flex justify-center items-center py-40"><p className="text-xl text-gray-400">Loading...</p></div>;
   }
+
   if (!algorithm) {
     return (
-        <div className="text-center py-40 px-6">
-            <h1 className="text-4xl font-bold text-red-500 mb-4">404 - Not Found</h1>
-            <p className="text-lg opacity-80 mb-8">The algorithm you are looking for does not exist.</p>
-            <button onClick={() => navigate(-1)} className="text-red-500 border border-red-500 px-6 py-2 rounded-lg hover:bg-red-500 hover:text-black transition-colors">
-                Go Back
-            </button>
-        </div>
+      <div className="text-center py-40 px-6">
+        <h1 className="text-4xl font-bold text-red-500 mb-4">404 - Not Found</h1>
+        <p className="text-lg opacity-80 mb-8">The algorithm you are looking for does not exist.</p>
+        <button onClick={() => navigate(-1)} className="text-red-500 border border-red-500 px-6 py-2 rounded-lg hover:bg-red-500 hover:text-black transition-colors">
+          Go Back
+        </button>
+      </div>
     );
   }
 
@@ -120,12 +119,11 @@ const AlgorithmPage = () => {
     <>
       <div className="max-w-4xl mx-auto py-32 px-6 md:px-10">
         <div className="mb-8">
-            <button onClick={() => navigate(-1)} className="text-red-500 border border-red-500/50 px-6 py-2 rounded-lg hover:bg-red-500 hover:text-black transition-colors text-sm">
-                ← Back to All Algorithms
-            </button>
+          <button onClick={() => navigate(-1)} className="text-red-500 border border-red-500/50 px-6 py-2 rounded-lg hover:bg-red-500 hover:text-black transition-colors text-sm">
+            ← Back to All Algorithms
+          </button>
         </div>
         <h1 className="text-5xl md:text-6xl font-bold tracking-tighter mb-4 text-white uppercase">{algorithm.title}</h1>
-      
         <div className="mt-12 space-y-10">
           <div>
             <h2 className="text-sm font-semibold text-red-500 tracking-widest uppercase mb-3">When to Use</h2>
@@ -146,7 +144,7 @@ const AlgorithmPage = () => {
             </pre>
           </div>
         </div>
-      
+        
         <div className="mt-16 pt-10 border-t border-border-color">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-3xl font-semibold text-white tracking-wide">My Solved Questions</h2>
@@ -154,7 +152,6 @@ const AlgorithmPage = () => {
               + Add Question
             </button>
           </div>
-          
           <div className="space-y-4">
             {questions.length > 0 ? (
               questions.map(q => (
@@ -181,40 +178,40 @@ const AlgorithmPage = () => {
 
       <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={modalTitle}>
         <form onSubmit={handleFormSubmit} className="space-y-4">
-            <div className="form-group">
-                <label className="form-label" htmlFor="problem">Problem Statement</label>
-                <input id="problem" name="problem" type="text" value={formData.problem} onChange={handleInputChange} className="form-input" required />
+          <div className="form-group">
+            <label className="form-label" htmlFor="problem">Problem Statement</label>
+            <input id="problem" name="problem" type="text" value={formData.problem} onChange={handleInputChange} className="form-input" required />
+          </div>
+          <div className="form-group">
+            <label className="form-label" htmlFor="intuition">Intuition</label>
+            <textarea id="intuition" name="intuition" value={formData.intuition} onChange={handleInputChange} className="form-textarea" />
+          </div>
+          <div className="form-group">
+            <label className="form-label" htmlFor="approaches">Approaches</label>
+            <textarea id="approaches" name="approaches" value={formData.approaches} onChange={handleInputChange} className="form-textarea" />
+          </div>
+          <div className="form-group">
+            <label className="form-label" htmlFor="solution">Solution (Code)</label>
+            <textarea id="solution" name="solution" value={formData.solution} onChange={handleInputChange} className="form-textarea solution-textarea" />
+          </div>
+          <div className="flex gap-4">
+            <div className="form-group flex-1">
+              <label className="form-label" htmlFor="timeComplexity">Time Complexity</label>
+              <input id="timeComplexity" name="timeComplexity" type="text" value={formData.timeComplexity} onChange={handleInputChange} className="form-input" placeholder="e.g., O(n)" />
             </div>
-            <div className="form-group">
-                <label className="form-label" htmlFor="intuition">Intuition</label>
-                <textarea id="intuition" name="intuition" value={formData.intuition} onChange={handleInputChange} className="form-textarea" />
+            <div className="form-group flex-1">
+              <label className="form-label" htmlFor="spaceComplexity">Space Complexity</label>
+              <input id="spaceComplexity" name="spaceComplexity" type="text" value={formData.spaceComplexity} onChange={handleInputChange} className="form-input" placeholder="e.g., O(1)" />
             </div>
-            <div className="form-group">
-                <label className="form-label" htmlFor="approaches">Approaches</label>
-                <textarea id="approaches" name="approaches" value={formData.approaches} onChange={handleInputChange} className="form-textarea" />
-            </div>
-            <div className="form-group">
-                <label className="form-label" htmlFor="solution">Solution (Code)</label>
-                <textarea id="solution" name="solution" value={formData.solution} onChange={handleInputChange} className="form-textarea solution-textarea" />
-            </div>
-            <div className="flex gap-4">
-                <div className="form-group flex-1">
-                    <label className="form-label" htmlFor="timeComplexity">Time Complexity</label>
-                    <input id="timeComplexity" name="timeComplexity" type="text" value={formData.timeComplexity} onChange={handleInputChange} className="form-input" placeholder="e.g., O(n)" />
-                </div>
-                <div className="form-group flex-1">
-                    <label className="form-label" htmlFor="spaceComplexity">Space Complexity</label>
-                    <input id="spaceComplexity" name="spaceComplexity" type="text" value={formData.spaceComplexity} onChange={handleInputChange} className="form-input" placeholder="e.g., O(1)" />
-                </div>
-            </div>
-            <div className="pt-4 mt-2 border-t border-border-color flex justify-end gap-4">
-                <button type="button" onClick={() => setIsModalOpen(false)} className="px-4 py-2 rounded-lg text-gray-300 hover:bg-gray-800 transition-colors">
-                Cancel
-                </button>
-                <button type="submit" className="save-btn">
-                {formData.id ? 'Save Changes' : 'Add Question'}
-                </button>
-            </div>
+          </div>
+          <div className="pt-4 mt-2 border-t border-border-color flex justify-end gap-4">
+            <button type="button" onClick={() => setIsModalOpen(false)} className="px-4 py-2 rounded-lg text-gray-300 hover:bg-gray-800 transition-colors">
+              Cancel
+            </button>
+            <button type="submit" className="save-btn">
+              {formData.id ? 'Save Changes' : 'Add Question'}
+            </button>
+          </div>
         </form>
       </Modal>
     </>

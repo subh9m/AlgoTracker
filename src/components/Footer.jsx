@@ -1,4 +1,6 @@
 import React from 'react';
+// 1. Import HashLink instead of Link
+import { HashLink as Link } from 'react-router-hash-link';
 
 const Footer = () => (
   <footer className="border-t border-border-color py-16 px-6 md:px-10 text-center">
@@ -6,9 +8,14 @@ const Footer = () => (
       <ul className="flex justify-center gap-6 md:gap-10 list-none mb-8">
         {['Home', 'Approach', 'Algorithms', 'Plan'].map(link => (
           <li key={link}>
-            <a href={`/#${link.toLowerCase()}`} className="text-gray-300 text-sm tracking-wider transition-colors duration-300 hover:text-red-500">
+            {/* 2. Use the new Link here as well. */}
+            <Link 
+              to={`/#${link.toLowerCase()}`} 
+              className="text-gray-300 text-sm tracking-wider transition-colors duration-300 hover:text-red-500"
+              smooth
+            >
               {link}
-            </a>
+            </Link>
           </li>
         ))}
       </ul>

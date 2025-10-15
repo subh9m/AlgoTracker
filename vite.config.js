@@ -1,9 +1,8 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
-// https://vite.dev/config/
+// ✅ Make sure this matches your repo name!
 export default defineConfig({
-  base: "/AlgoTracker/",
+  base: '/AlgoTracker/',
   plugins: [react()],
-});
-
+})

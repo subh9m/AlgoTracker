@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Routes, Route } from 'react-router-dom';
 
 // Import Pages
@@ -11,7 +11,6 @@ import Header from './components/Header';
 import Footer from './components/Footer';
 import ScrollToTop from './components/ScrollToTop';
 import PasswordScreen from './components/PasswordScreen';
-
 
 const CORRECT_PASSWORD = import.meta.env.VITE_APP_PASSWORD;
 const AUTH_KEY = 'isAuthenticated';
@@ -58,4 +57,3 @@ function App() {
 }
 
 export default App;
-

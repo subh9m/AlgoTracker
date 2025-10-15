@@ -10,7 +10,6 @@ const AlgoCard = ({ title, when, keywords, examples, code, slug }) => (
       <strong className="font-medium text-white/90 text-sm">EXAMPLES:</strong> 
       <span className="text-sm opacity-70"> {examples}</span>
     </div>
-    
     <div className="mt-6">
       <Link
         to={`/algorithm/${slug}`}

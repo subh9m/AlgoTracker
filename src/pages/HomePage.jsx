@@ -1,12 +1,14 @@
 import React from 'react';
+// 1. Import HashLink to handle scrolling to page sections
+import { HashLink as Link } from 'react-router-hash-link';
 
 // Import Data
-import { 
-  approachSteps, 
-  foundationalAlgos, 
-  advancedAlgos, 
-  timelineData, 
-  quotesData 
+import {
+  approachSteps,
+  foundationalAlgos,
+  advancedAlgos,
+  timelineData,
+  quotesData
 } from '../data';
 
 // Import Components
@@ -26,9 +28,14 @@ const HomePage = () => {
         <p className="text-lg md:text-xl font-light tracking-wider max-w-3xl mx-auto mb-12 opacity-80">
           Transform from struggling coder to confident problem solver. Battle-tested strategies from FAANG interviews.
         </p>
-        <a href="#approach" className="inline-block px-8 py-3 bg-transparent text-red-500 border-2 border-red-500 rounded-xl text-sm font-semibold tracking-widest transition-all duration-300 ease-in-out hover:bg-red-500 hover:text-black hover:shadow-[0_0_20px_rgba(255,0,0,0.4)] md:hover:-translate-y-1 active:scale-95">
+        {/* 2. Replace the <a> tag with the Link component */}
+        <Link
+          to="/#approach"
+          smooth
+          className="inline-block px-8 py-3 bg-transparent text-red-500 border-2 border-red-500 rounded-xl text-sm font-semibold tracking-widest transition-all duration-300 ease-in-out hover:bg-red-500 hover:text-black hover:shadow-[0_0_20px_rgba(255,0,0,0.4)] md:hover:-translate-y-1 active:scale-95"
+        >
           START LEARNING
-        </a>
+        </Link>
       </section>
 
       <QuoteRotator quotes={quotesData.set1.quotes} duration={quotesData.set1.duration} />
@@ -37,13 +44,13 @@ const HomePage = () => {
       <div id="approach" className="max-w-7xl mx-auto px-6 md:px-10 py-20 space-y-16">
         <SectionTitle title="THE 5-STEP APPROACH" subtitle="A systematic method to solve any coding interview problem" />
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-8">
-            {approachSteps.map(step => (
-              <div key={step.num} className="bg-black/60 backdrop-blur-md border border-border-color rounded-2xl p-8 transition-all duration-500 ease-in-out flex flex-col hover:border-red-500/50 md:hover:-translate-y-1 hover:shadow-[0_0_25px_rgba(255,0,0,0.25)] active:scale-[0.98] md:active:scale-100">
-                <div className="text-6xl font-bold text-red-500 leading-none mb-5" style={{fontFamily: '"IBM Plex Mono", monospace'}}>{step.num}</div>
-                <h3 className="text-xl font-semibold tracking-wider mb-4 text-white uppercase">{step.title}</h3>
-                <p className="text-sm font-light leading-relaxed opacity-80 flex-grow">{step.desc}</p>
-              </div>
-            ))}
+          {approachSteps.map(step => (
+            <div key={step.num} className="bg-black/60 backdrop-blur-md border border-border-color rounded-2xl p-8 transition-all duration-500 ease-in-out flex flex-col hover:border-red-500/50 md:hover:-translate-y-1 hover:shadow-[0_0_25px_rgba(255,0,0,0.25)] active:scale-[0.98] md:active:scale-100">
+              <div className="text-6xl font-bold text-red-500 leading-none mb-5" style={{fontFamily: '"IBM Plex Mono", monospace'}}>{step.num}</div>
+              <h3 className="text-xl font-semibold tracking-wider mb-4 text-white uppercase">{step.title}</h3>
+              <p className="text-sm font-light leading-relaxed opacity-80 flex-grow">{step.desc}</p>
+            </div>
+          ))}
         </div>
       </div>
 
@@ -66,19 +73,19 @@ const HomePage = () => {
 
       {/* ACTION PLAN SECTION */}
       <div id="plan" className="max-w-7xl mx-auto px-6 md:px-10 py-20">
-            <SectionTitle title="YOUR 8-WEEK ACTION PLAN" subtitle="From foundation to expert level mastery" />
-            <div className="mt-16 max-w-3xl mx-auto">
-                {timelineData.map((item, index) => (
-                    <div key={index} className="pl-8 sm:pl-10 pb-16 border-l-2 border-border-color relative transition-colors duration-300 ease-in-out hover:border-red-500 group">
-                        <div className="absolute left-[-8px] top-1 w-3.5 h-3.5 bg-red-500 rounded-full border-2 border-black transition-all duration-300 ease-in-out group-hover:shadow-[0_0_10px_rgba(255,0,0,0.5)]"></div>
-                        <div className="text-sm font-semibold tracking-widest text-red-500 mb-2.5 uppercase">{item.week}</div>
-                        <h3 className="text-2xl font-semibold mb-4 text-white">{item.title}</h3>
-                        <p className="text-sm font-light opacity-80 leading-relaxed">{item.desc}</p>
-                    </div>
-                ))}
+        <SectionTitle title="YOUR 8-WEEK ACTION PLAN" subtitle="From foundation to expert level mastery" />
+        <div className="mt-16 max-w-3xl mx-auto">
+          {timelineData.map((item, index) => (
+            <div key={index} className="pl-8 sm:pl-10 pb-16 border-l-2 border-border-color relative transition-colors duration-300 ease-in-out hover:border-red-500 group">
+              <div className="absolute left-[-8px] top-1 w-3.5 h-3.5 bg-red-500 rounded-full border-2 border-black transition-all duration-300 ease-in-out group-hover:shadow-[0_0_10px_rgba(255,0,0,0.5)]"></div>
+              <div className="text-sm font-semibold tracking-widest text-red-500 mb-2.5 uppercase">{item.week}</div>
+              <h3 className="text-2xl font-semibold mb-4 text-white">{item.title}</h3>
+              <p className="text-sm font-light opacity-80 leading-relaxed">{item.desc}</p>
             </div>
+          ))}
+        </div>
       </div>
-      
+
       <QuoteRotator quotes={quotesData.set4.quotes} duration={quotesData.set4.duration} />
 
       <FocusTimer />
