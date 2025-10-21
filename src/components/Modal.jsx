@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 
-const Modal = ({ isOpen, onClose, title, children }) => {
+const Modal = ({ isOpen, onClose, title, children, className = "" }) => {
   useEffect(() => {
     const handleEsc = (event) => {
       if (event.key === 'Escape') {
@@ -21,7 +21,11 @@ const Modal = ({ isOpen, onClose, title, children }) => {
 
   return (
     <div className="modal-backdrop" onClick={onClose}>
-      <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+      <div 
+        // Merges passed-in classNames (like "max-w-5xl") with the base style
+        className={`modal-content ${className}`} 
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="modal-header">
           <h2 className="modal-title">{title}</h2>
           <button onClick={onClose} className="modal-close-btn">&times;</button>

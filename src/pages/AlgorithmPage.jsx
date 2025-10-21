@@ -1,42 +1,144 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { foundationalAlgos, advancedAlgos } from '../data';
-import { db } from '../firebase';
+import React, { useState, useEffect, useCallback } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { foundationalAlgos, advancedAlgos } from "../data"; // Assuming you have this
+import { db } from "../firebase"; // Assuming you have this
 import { doc, getDoc, setDoc } from "firebase/firestore";
-import Modal from '../components/Modal';
+import Modal from "../components/Modal";
+import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
+import { GripVertical } from "lucide-react";
+
+// --- IMPORTS FOR SYNTAX HIGHLIGHTING ---
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
+import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism'; // VS Code theme
+import Editor from 'react-simple-code-editor';
+import { highlight, languages } from 'prismjs/components/prism-core';
+import 'prismjs/components/prism-clike';
+import 'prismjs/components/prism-javascript';
+// Add other languages if needed, e.g., 'prismjs/components/prism-cpp'
+// --- END IMPORTS ---
 
 const initialFormState = {
   id: null,
-  problem: '',
-  intuition: '',
-  approaches: '',
-  solution: '',
-  timeComplexity: '',
-  spaceComplexity: '',
+  problem: "",
+  intuition: "",
+  approaches: "",
+  solution: "",
+  timeComplexity: "",
+  spaceComplexity: "",
+  difficulty: "medium",
+  createdAt: null,
 };
+
+const QuestionItem = React.memo(
+  ({ q, index, onEdit, onRemove, dragHandleProps }) => {
+    // Difficulty-based accent colors (Nothing OS style)
+    const difficultyStyles = {
+      easy: {
+        border: "border-green-500/60",
+        accent: "text-green-400",
+        hover: "hover:shadow-[0_0_20px_rgba(0,255,0,0.25)]",
+      },
+      medium: {
+        border: "border-yellow-500/60",
+        accent: "text-yellow-300",
+        hover: "hover:shadow-[0_0_20px_rgba(255,255,0,0.25)]",
+      },
+      hard: {
+        border: "border-red-500/60",
+        accent: "text-red-400",
+        hover: "hover:shadow-[0_0_25px_rgba(255,0,0,0.35)]",
+      },
+      undefined: {
+        border: "border-gray-600/60",
+        accent: "text-gray-400",
+        hover: "hover:shadow-[0_0_20px_rgba(255,255,255,0.15)]",
+      },
+    };
+
+    const styles = difficultyStyles[q.difficulty] || difficultyStyles.undefined;
+
+    return (
+      <div
+        onClick={() => onEdit(q)}
+        className={`bg-black/60 backdrop-blur-md border ${styles.border} 
+          rounded-2xl p-4 mb-3 cursor-pointer 
+          transition-all duration-500 ease-in-out 
+          hover:-translate-y-1 ${styles.hover}`}
+      >
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4 flex-1 min-w-0">
+            {/* Drag Handle */}
+            <div
+              {...dragHandleProps}
+              onClick={(e) => e.stopPropagation()}
+              className={`cursor-grab active:cursor-grabbing ${styles.accent} 
+                hover:text-white transition-all duration-300`}
+            >
+              <GripVertical size={18} />
+            </div>
+
+            {/* Index */}
+            <span
+              className={`text-sm font-mono ${styles.accent} opacity-80 w-6 text-center flex-shrink-0`}
+            >
+              {index + 1}.
+            </span>
+
+            {/* Problem name */}
+            <span
+              className={`font-medium text-gray-100 truncate 
+                hover:text-red-400 transition-colors duration-300`}
+            >
+              {q.problem}
+            </span>
+          </div>
+
+          {/* Remove Button */}
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onRemove(q.id);
+            }}
+            className={`border border-[#333] text-gray-400 px-3 py-1 text-xs rounded-lg flex-shrink-0 ml-4
+              hover:bg-red-500 hover:text-black hover:shadow-[0_0_15px_rgba(255,0,0,0.4)] 
+              transition-all duration-300 ease-in-out`}
+          >
+            Remove
+          </button>
+        </div>
+
+        {/* Timestamp */}
+        <p
+          className={`text-xs mt-2 ml-10 text-gray-500 font-light tracking-wide`}
+        >
+          Saved on{" "}
+          {q.createdAt ? new Date(q.createdAt).toLocaleString() : "—"}
+        </p>
+      </div>
+    );
+  }
+);
 
 const AlgorithmPage = () => {
   const { slug } = useParams();
   const navigate = useNavigate();
-  const algorithm = [...foundationalAlgos, ...advancedAlgos].find(algo => algo.slug === slug);
+  const algorithm = [...foundationalAlgos, ...advancedAlgos].find(
+    (algo) => algo.slug === slug
+  );
 
   const [questions, setQuestions] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [status, setStatus] = useState('');
+  const [status, setStatus] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [formData, setFormData] = useState(initialFormState);
-  const [modalTitle, setModalTitle] = useState('Add a New Solved Question');
+  const [modalTitle, setModalTitle] = useState("Add a New Solved Question");
 
   const fetchQuestions = useCallback(async () => {
     if (!slug) return;
     setIsLoading(true);
     const docRef = doc(db, "solved_questions", slug);
     const docSnap = await getDoc(docRef);
-    if (docSnap.exists()) {
-      setQuestions(docSnap.data().questions || []);
-    } else {
-      setQuestions([]);
-    }
+    setQuestions(docSnap.exists() ? docSnap.data().questions || [] : []);
     setIsLoading(false);
   }, [slug]);
 
@@ -46,176 +148,361 @@ const AlgorithmPage = () => {
 
   const updateAndSaveChanges = async (newQuestionsList) => {
     setQuestions(newQuestionsList);
-    setStatus('Saving...');
+    setStatus("Saving...");
     try {
-      const docRef = doc(db, "solved_questions", slug);
-      await setDoc(docRef, { questions: newQuestionsList });
-      setStatus('Saved!');
+      await setDoc(doc(db, "solved_questions", slug), {
+        questions: newQuestionsList,
+      });
+      setStatus("Saved!");
     } catch (error) {
       console.error("Error saving document: ", error);
-      setStatus('Error!');
+      setStatus("Error!");
     }
-    setTimeout(() => setStatus(''), 2000);
+    setTimeout(() => setStatus(""), 2000);
   };
 
   const handleFormSubmit = async (e) => {
     e.preventDefault();
-    if (!formData.problem.trim()) {
-      alert('Problem Statement cannot be empty.');
-      return;
-    }
-    let updatedQuestions;
-    if (formData.id) {
-      updatedQuestions = questions.map(q => q.id === formData.id ? formData : q);
-    } else {
-      const newQuestion = { ...formData, id: Date.now() };
-      updatedQuestions = [...questions, newQuestion];
-    }
+    if (!formData.problem.trim())
+      return alert("Problem Statement cannot be empty.");
+
+    const updatedQuestions = formData.id
+      ? questions.map((q) => (q.id === formData.id ? formData : q))
+      : [
+          ...questions,
+          { ...formData, id: Date.now(), createdAt: new Date().toISOString() },
+        ];
+
     setIsModalOpen(false);
     await updateAndSaveChanges(updatedQuestions);
   };
-  
+
   const handleRemoveQuestion = async (idToRemove) => {
-    if (window.confirm("Are you sure you want to remove this question?")) {
-      const updatedQuestions = questions.filter(q => q.id !== idToRemove);
-      await updateAndSaveChanges(updatedQuestions);
-    }
+    if (!window.confirm("Are you sure you want to remove this question?"))
+      return;
+    const updatedQuestions = questions.filter((q) => q.id !== idToRemove);
+    await updateAndSaveChanges(updatedQuestions);
   };
 
   const handleOpenAddModal = () => {
     setFormData(initialFormState);
-    setModalTitle('Add a New Solved Question');
+    setModalTitle("Add a New Solved Question");
     setIsModalOpen(true);
   };
 
   const handleOpenEditModal = (questionToEdit) => {
     setFormData(questionToEdit);
-    setModalTitle('Edit Solved Question');
+    setModalTitle("Edit Solved Question");
     setIsModalOpen(true);
   };
-  
+
   const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+  };
+
+  // --- NEW HANDLER FOR CODE EDITOR ---
+  const handleEditorChange = (code) => {
+    setFormData((prev) => ({ ...prev, solution: code }));
+  };
+  // --- END NEW HANDLER ---
+
+  const handleDragEnd = async (result) => {
+    if (!result.destination) return;
+    const newList = Array.from(questions);
+    const [moved] = newList.splice(result.source.index, 1);
+    newList.splice(result.destination.index, 0, moved);
+    await updateAndSaveChanges(newList);
   };
 
   if (isLoading) {
-    return <div className="flex justify-center items-center py-40"><p className="text-xl text-gray-400">Loading...</p></div>;
+    return (
+      <p className="text-xl text-gray-400 text-center py-40 font-mono tracking-wider">
+        Loading...
+      </p>
+    );
   }
 
   if (!algorithm) {
     return (
-      <div className="text-center py-40 px-6">
-        <h1 className="text-4xl font-bold text-red-500 mb-4">404 - Not Found</h1>
-        <p className="text-lg opacity-80 mb-8">The algorithm you are looking for does not exist.</p>
-        <button onClick={() => navigate(-1)} className="text-red-500 border border-red-500 px-6 py-2 rounded-lg hover:bg-red-500 hover:text-black transition-colors">
+      <div className="text-center py-40 px-6 max-w-7xl mx-auto">
+        <h1 className="text-4xl font-bold text-red-500 mb-4 tracking-wider uppercase">
+          404 - Not Found
+        </h1>
+        <p className="text-lg text-gray-300 mb-8">
+          The algorithm you are looking for does not exist.
+        </p>
+        <button
+          onClick={() => navigate(-1)}
+          className="save-btn" // Use the class from index.css
+        >
           Go Back
         </button>
       </div>
     );
   }
 
+  const infoSections = [
+    { title: "When to Use", content: algorithm.when },
+    {
+      title: "Keywords",
+      content: algorithm.keywords,
+      className: "font-mono text-gray-300",
+    },
+    { title: "Common Examples", content: algorithm.examples },
+    { title: "Sample Code", content: algorithm.code, pre: true },
+  ];
+
   return (
-    <>
-      <div className="max-w-4xl mx-auto py-32 px-6 md:px-10">
-        <div className="mb-8">
-          <button onClick={() => navigate(-1)} className="text-red-500 border border-red-500/50 px-6 py-2 rounded-lg hover:bg-red-500 hover:text-black transition-colors text-sm">
-            ← Back to All Algorithms
-          </button>
-        </div>
-        <h1 className="text-5xl md:text-6xl font-bold tracking-tighter mb-4 text-white uppercase">{algorithm.title}</h1>
-        <div className="mt-12 space-y-10">
-          <div>
-            <h2 className="text-sm font-semibold text-red-500 tracking-widest uppercase mb-3">When to Use</h2>
-            <p className="text-lg font-light leading-relaxed opacity-90">{algorithm.when}</p>
-          </div>
-          <div>
-            <h2 className="text-sm font-semibold text-red-500 tracking-widest uppercase mb-3">Keywords</h2>
-            <p className="text-lg font-light leading-relaxed opacity-90 font-mono text-gray-400">{algorithm.keywords}</p>
-          </div>
-          <div>
-            <h2 className="text-sm font-semibold text-red-500 tracking-widest uppercase mb-3">Common Examples</h2>
-            <p className="text-lg font-light leading-relaxed opacity-90">{algorithm.examples}</p>
-          </div>
-          <div>
-            <h2 className="text-sm font-semibold text-red-500 tracking-widest uppercase mb-3">Sample Code</h2>
-            <pre className="algo-code">
-              <code>{algorithm.code}</code>
-            </pre>
-          </div>
-        </div>
-        
-        <div className="mt-16 pt-10 border-t border-border-color">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-3xl font-semibold text-white tracking-wide">My Solved Questions</h2>
-            <button onClick={handleOpenAddModal} className="save-btn">
-              + Add Question
-            </button>
-          </div>
-          <div className="space-y-4">
-            {questions.length > 0 ? (
-              questions.map(q => (
-                <div key={q.id} onClick={() => handleOpenEditModal(q)} className="bg-surface-color p-4 rounded-lg border border-border-color cursor-pointer hover:border-red-500/50 hover:bg-white/5 transition-all flex justify-between items-center">
-                  <span className="font-medium text-white">{q.problem}</span>
-                  <button 
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleRemoveQuestion(q.id);
-                    }} 
-                    className="text-xs text-red-500 hover:text-red-400 ml-4 px-3 py-1 rounded-md hover:bg-red-500/10 transition-colors"
-                  >
-                    Remove
-                  </button>
-                </div>
-              ))
+  <>
+    <div className="max-w-7xl mx-auto pt-24 pb-16 px-6 md:px-10">
+      {/* --- FIXED BACK BUTTON --- */}
+      <div className="sticky top-8 z-30 mb-10 animate-fadeIn">
+        <button
+          onClick={() => navigate(-1)}
+          className="save-btn text-sm backdrop-blur-md bg-black/40 border border-[#222] 
+                     hover:bg-red-600 hover:text-white transition-all duration-300"
+        >
+          ← Back to All Algorithms
+        </button>
+      </div>
+      {/* --- END FIX --- */}
+
+      <h1 className="text-5xl md:text-6xl font-bold tracking-wider mb-4 text-white uppercase">
+        {algorithm.title}
+      </h1>
+
+      <div className="mt-12 space-y-10">
+        {infoSections.map((sec) => (
+          <div key={sec.title}>
+            <h2 className="text-sm font-semibold text-red-500 tracking-widest uppercase mb-3">
+              {sec.title}
+            </h2>
+            {sec.pre ? (
+              <SyntaxHighlighter
+                language="javascript"
+                style={vscDarkPlus}
+                customStyle={{
+                  borderRadius: "0.75rem",
+                  border: "1px solid #333",
+                  backgroundColor: "#1E1E1E",
+                }}
+                wrapLines={true}
+                showLineNumbers={true}
+              >
+                {sec.content}
+              </SyntaxHighlighter>
             ) : (
-              <p className="text-gray-500 italic text-center py-8">No questions saved yet. Click "+ Add Question" to get started.</p>
+              <p
+                className={`text-lg font-light leading-relaxed text-gray-200 ${
+                  sec.className || ""
+                }`}
+              >
+                {sec.content}
+              </p>
             )}
           </div>
-          {status && <p className="text-green-400 text-sm mt-4 text-center">{status}</p>}
-        </div>
+        ))}
       </div>
 
-      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={modalTitle}>
-        <form onSubmit={handleFormSubmit} className="space-y-4">
-          <div className="form-group">
-            <label className="form-label" htmlFor="problem">Problem Statement</label>
-            <input id="problem" name="problem" type="text" value={formData.problem} onChange={handleInputChange} className="form-input" required />
+      {/* Solved Questions Section */}
+      <div className="mt-16 pt-10 border-t border-[#333]">
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-3xl font-semibold text-white tracking-wider">
+            My Solved Questions
+          </h2>
+          <button onClick={handleOpenAddModal} className="save-btn">
+            + Add Question
+          </button>
+        </div>
+
+        <DragDropContext onDragEnd={handleDragEnd}>
+          <Droppable droppableId="questionsList">
+            {(provided) => (
+              <div {...provided.droppableProps} ref={provided.innerRef}>
+                {questions.length > 0 ? (
+                  questions.map((q, index) => (
+                    <Draggable
+                      key={q.id}
+                      draggableId={q.id.toString()}
+                      index={index}
+                    >
+                      {(provided, snapshot) => (
+                        <div
+                          ref={provided.innerRef}
+                          {...provided.draggableProps}
+                          className={`${
+                            snapshot.isDragging
+                              ? "scale-[1.02] shadow-[0_0_25px_rgba(255,0,0,0.35)]"
+                              : ""
+                          } transition-transform duration-300 ease-in-out`}
+                        >
+                          <QuestionItem
+                            q={q}
+                            index={index}
+                            onEdit={handleOpenEditModal}
+                            onRemove={handleRemoveQuestion}
+                            dragHandleProps={provided.dragHandleProps}
+                          />
+                        </div>
+                      )}
+                    </Draggable>
+                  ))
+                ) : (
+                  <p className="text-gray-500 italic text-center py-8">
+                    No questions saved yet. Click "+ Add Question" to get
+                    started.
+                  </p>
+                )}
+                {provided.placeholder}
+              </div>
+            )}
+          </Droppable>
+        </DragDropContext>
+
+        {status && (
+          <p
+            className={`text-sm mt-4 text-center font-mono ${
+              status === "Error!" ? "text-red-500" : "text-gray-300"
+            }`}
+          >
+            {status}
+          </p>
+        )}
+      </div>
+    </div>
+
+    {/* --- MODAL --- */}
+    <Modal
+      isOpen={isModalOpen}
+      onClose={() => setIsModalOpen(false)}
+      title={modalTitle}
+      className="max-w-7xl"
+    >
+      <form onSubmit={handleFormSubmit} className="space-y-6">
+        <div className="form-group">
+          <label className="form-label" htmlFor="problem">
+            Problem Statement
+          </label>
+          <input
+            id="problem"
+            name="problem"
+            type="text"
+            value={formData.problem}
+            onChange={handleInputChange}
+            className="form-input"
+            required
+          />
+        </div>
+        <div className="form-group">
+          <label className="form-label" htmlFor="intuition">
+            Intuition
+          </label>
+          <textarea
+            id="intuition"
+            name="intuition"
+            value={formData.intuition}
+            onChange={handleInputChange}
+            className="form-textarea"
+          />
+        </div>
+        <div className="form-group">
+          <label className="form-label" htmlFor="approaches">
+            Approaches
+          </label>
+          <textarea
+            id="approaches"
+            name="approaches"
+            value={formData.approaches}
+            onChange={handleInputChange}
+            className="form-textarea"
+          />
+        </div>
+
+        {/* --- SOLUTION CODE BLOCK --- */}
+        <div className="form-group">
+          <label className="form-label" htmlFor="solution">
+            Solution (Code)
+          </label>
+          <Editor
+            value={formData.solution}
+            onValueChange={handleEditorChange}
+            highlight={(code) => highlight(code, languages.js, "js")}
+            padding={16}
+            className="form-input prism-editor-wrapper"
+            textareaId="solution"
+            style={{
+              minHeight: "200px",
+            }}
+          />
+        </div>
+        {/* --- END SOLUTION --- */}
+
+        <div className="form-group">
+          <label className="form-label" htmlFor="difficulty">
+            Difficulty
+          </label>
+          <select
+            id="difficulty"
+            name="difficulty"
+            value={formData.difficulty}
+            onChange={handleInputChange}
+            className="form-input"
+          >
+            <option value="easy">Easy</option>
+            <option value="medium">Medium</option>
+            <option value="hard">Hard</option>
+            <option value="undefined">Undefined</option>
+          </select>
+        </div>
+
+        <div className="flex flex-col md:flex-row gap-6">
+          <div className="form-group flex-1">
+            <label className="form-label" htmlFor="timeComplexity">
+              Time Complexity
+            </label>
+            <input
+              id="timeComplexity"
+              name="timeComplexity"
+              type="text"
+              value={formData.timeComplexity}
+              onChange={handleInputChange}
+              className="form-input font-mono"
+              placeholder="e.g., O(n)"
+            />
           </div>
-          <div className="form-group">
-            <label className="form-label" htmlFor="intuition">Intuition</label>
-            <textarea id="intuition" name="intuition" value={formData.intuition} onChange={handleInputChange} className="form-textarea" />
+          <div className="form-group flex-1">
+            <label className="form-label" htmlFor="spaceComplexity">
+              Space Complexity
+            </label>
+            <input
+              id="spaceComplexity"
+              name="spaceComplexity"
+              type="text"
+              value={formData.spaceComplexity}
+              onChange={handleInputChange}
+              className="form-input font-mono"
+              placeholder="e.g., O(1)"
+            />
           </div>
-          <div className="form-group">
-            <label className="form-label" htmlFor="approaches">Approaches</label>
-            <textarea id="approaches" name="approaches" value={formData.approaches} onChange={handleInputChange} className="form-textarea" />
-          </div>
-          <div className="form-group">
-            <label className="form-label" htmlFor="solution">Solution (Code)</label>
-            <textarea id="solution" name="solution" value={formData.solution} onChange={handleInputChange} className="form-textarea solution-textarea" />
-          </div>
-          <div className="flex gap-4">
-            <div className="form-group flex-1">
-              <label className="form-label" htmlFor="timeComplexity">Time Complexity</label>
-              <input id="timeComplexity" name="timeComplexity" type="text" value={formData.timeComplexity} onChange={handleInputChange} className="form-input" placeholder="e.g., O(n)" />
-            </div>
-            <div className="form-group flex-1">
-              <label className="form-label" htmlFor="spaceComplexity">Space Complexity</label>
-              <input id="spaceComplexity" name="spaceComplexity" type="text" value={formData.spaceComplexity} onChange={handleInputChange} className="form-input" placeholder="e.g., O(1)" />
-            </div>
-          </div>
-          <div className="pt-4 mt-2 border-t border-border-color flex justify-end gap-4">
-            <button type="button" onClick={() => setIsModalOpen(false)} className="px-4 py-2 rounded-lg text-gray-300 hover:bg-gray-800 transition-colors">
-              Cancel
-            </button>
-            <button type="submit" className="save-btn">
-              {formData.id ? 'Save Changes' : 'Add Question'}
-            </button>
-          </div>
-        </form>
-      </Modal>
-    </>
-  );
+        </div>
+
+        <div className="pt-6 mt-4 border-t border-[#333] flex justify-end gap-4">
+          <button
+            type="button"
+            onClick={() => setIsModalOpen(false)}
+            className="cancel-btn"
+          >
+            Cancel
+          </button>
+          <button type="submit" className="save-btn">
+            {formData.id ? "Save Changes" : "Add Question"}
+          </button>
+        </div>
+      </form>
+    </Modal>
+  </>
+);
+
 };
 
 export default AlgorithmPage;
