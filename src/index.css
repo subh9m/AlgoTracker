@@ -2,33 +2,49 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer base {
+  body {
+    /* Define light mode defaults FIRST */
+    @apply bg-white text-gray-900 transition-colors duration-300;
+    /* Apply dark mode overrides */
+    @apply dark:bg-black dark:text-gray-100;
+  }
+}
+
+html {
+  transition: background-color 0.3s ease, color 0.3s ease;
+  /* The useTheme hook adds the 'dark' class here */
+}
+
 @layer components {
   /*
-  |--------------------------------------------------------------------------
-  | Modal Styles
-  |--------------------------------------------------------------------------
-  */
+ |--------------------------------------------------------------------------
+ | Modal Styles
+ |--------------------------------------------------------------------------
+ */
   .modal-backdrop {
-    @apply fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md transition-all duration-300 ease-in-out;
+    @apply fixed inset-0 z-50 flex items-center justify-center bg-gray-900/70 dark:bg-black/80 backdrop-blur-md transition-all duration-300 ease-in-out;
   }
 
   .modal-content {
-  @apply backdrop-blur-lg border border-[#333] rounded-2xl shadow-xl w-[95%] md:w-[85%] lg:w-[75%] max-w-[90rem] max-h-[90vh] flex flex-col;
-  background: linear-gradient(180deg, rgba(12,12,12,0.95), rgba(18,18,18,0.9));
-  margin: 0 auto;
-}
+    @apply bg-white dark:backdrop-blur-lg border border-gray-200 dark:border-[#333] 
+    rounded-2xl shadow-2xl w-[95%] md:w-[85%] lg:w-[75%] max-w-[90rem] max-h-[90vh] 
+    flex flex-col m-auto;
 
+    /* Apply dark background gradient */
+    @apply dark:bg-gradient-to-b dark:from-[rgba(12,12,12,0.95)] dark:to-[rgba(18,18,18,0.9)];
+  }
 
   .modal-header {
-    @apply flex items-center justify-between p-6 border-b border-[#333];
+    @apply flex items-center justify-between p-6 border-b border-gray-200 dark:border-[#333];
   }
 
   .modal-title {
-    @apply text-2xl font-semibold text-white tracking-wider;
+    @apply text-2xl font-semibold text-gray-900 dark:text-white tracking-wider;
   }
 
   .modal-close-btn {
-    @apply text-gray-400 text-3xl font-light hover:text-white transition-colors duration-300;
+    @apply text-gray-500 hover:text-gray-900 dark:text-gray-400 text-3xl font-light dark:hover:text-white transition-colors duration-300;
   }
 
   .modal-body {
@@ -36,77 +52,70 @@
   }
 
   /*
-  |--------------------------------------------------------------------------
-  | Form Styles
-  |--------------------------------------------------------------------------
-  */
+ |--------------------------------------------------------------------------
+ | Form Styles
+ |--------------------------------------------------------------------------
+ */
   .form-label {
-    @apply block text-sm font-medium text-gray-300 mb-2 tracking-wider uppercase;
+    @apply block text-sm font-medium text-gray-600 dark:text-gray-300 mb-2 tracking-wider uppercase;
   }
 
   .form-input,
   .form-textarea,
   .form-select {
-    @apply w-full bg-[#0e0e0e]/80 border border-[#333] text-gray-100 rounded-lg p-3
-           focus:border-red-500 focus:shadow-[0_0_10px_rgba(255,0,0,0.25)] 
-           transition-all duration-300 placeholder-gray-600;
+    @apply w-full bg-white dark:bg-[#0e0e0e]/80 border border-gray-300 dark:border-[#333] 
+            text-gray-900 dark:text-gray-100 rounded-lg p-3
+            focus:border-red-500 focus:ring-1 focus:ring-red-500 dark:focus:shadow-[0_0_10px_rgba(255,0,0,0.25)] 
+            transition-all duration-300 placeholder-gray-400 dark:placeholder-gray-600;
   }
 
   .form-textarea {
-    @apply min-h-[100px];
+    /* Most styles are covered above. These are overrides. */
+    @apply bg-white dark:bg-transparent;
+    resize: none; /* prevent manual drag resize */
+    overflow: hidden; /* hide scrollbar */
+    min-height: 2.5rem; /* start small */
   }
 
   /*
-  |--------------------------------------------------------------------------
-  | Button Styles
-  |--------------------------------------------------------------------------
-  */
+ |--------------------------------------------------------------------------
+ | Button Styles
+ |--------------------------------------------------------------------------
+ */
   .save-btn {
     @apply border border-red-500 text-red-500 px-5 py-2 rounded-xl 
-           hover:bg-red-500 hover:text-black hover:shadow-[0_0_20px_rgba(255,0,0,0.4)] 
-           transition-all duration-300 ease-in-out;
+            hover:bg-red-500 hover:text-white dark:hover:text-black hover:shadow-[0_0_20px_rgba(255,0,0,0.4)] 
+            transition-all duration-300 ease-in-out;
   }
 
   .cancel-btn {
-    @apply text-gray-300 hover:text-white px-5 py-2 rounded-xl 
-           transition-colors duration-300;
+    @apply text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white px-5 py-2 rounded-xl 
+            transition-colors duration-300;
   }
 
   /*
-  |--------------------------------------------------------------------------
-  | SyntaxHighlighter Code Blocks (Read-Only Code)
-  |--------------------------------------------------------------------------
-  */
-  pre[class*="language-"] {
-    background: #1e1e1e !important; /* VS Code dark surface */
-    color: #d4d4d4;
-    border-radius: 0.75rem;
-    border: 1px solid #333;
-    padding: 1rem;
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 0.9rem;
-    line-height: 1.6rem;
-  }
-
-  /*
-  |--------------------------------------------------------------------------
-  | Code Editor (Editable Code via react-simple-code-editor)
-  |--------------------------------------------------------------------------
-  */
+ |--------------------------------------------------------------------------
+ | Code Editor (Editable Code via react-simple-code-editor)
+ |--------------------------------------------------------------------------
+ */
   .prism-editor-wrapper {
-    background: linear-gradient(180deg, #1a1a1a, #101010);
-    border: 1px solid #333;
+    /* --- Light Mode --- */
+    @apply bg-gray-50 border border-gray-300 text-gray-900;
+
+    /* --- Dark Mode --- */
+    @apply dark:bg-gradient-to-b dark:from-[#1a1a1a] dark:to-[#101010] 
+            dark:border-[#333] dark:text-[#d4d4d4]
+            dark:shadow-[inset_0_0_10px_rgba(255,0,0,0.05)];
+
     border-radius: 0.75rem;
-    box-shadow: inset 0 0 10px rgba(255, 0, 0, 0.05);
-    font-family: 'IBM Plex Mono', monospace !important;
-    color: #d4d4d4;
+    font-family: "IBM Plex Mono", monospace !important;
     caret-color: #ff5555; /* Red cursor for vibe */
     padding: 1rem;
   }
 
   .prism-editor-wrapper textarea,
   .prism-editor-wrapper pre {
-    font-family: 'IBM Plex Mono', monospace !important;
+    font-family: "IBM Plex Mono", monospace !important;
     font-size: 0.9rem;
     line-height: 1.5rem;
     white-space: pre-wrap !important;
@@ -114,28 +123,30 @@
   }
 
   /*
-  |--------------------------------------------------------------------------
-  | VS Code Syntax Colors
-  |--------------------------------------------------------------------------
-  */
+ |--------------------------------------------------------------------------
+ | LIGHT MODE Syntax Colors (for editable editor)
+ | (Based on PrismJS default light theme)
+ |--------------------------------------------------------------------------
+ */
   .token.comment,
   .token.prolog,
   .token.doctype,
   .token.cdata {
-    color: #6a9955; /* VSCode green for comments */
+    color: slategray;
   }
 
   .token.punctuation {
-    color: #ccc;
+    color: #999;
   }
 
-  .token.property,
-  .token.tag,
-  .token.boolean,
-  .token.number,
-  .token.constant,
-  .token.symbol {
-    color: #b5cea8; /* mint green for constants/numbers */
+.token.property,
+.token.tag,
+.token.boolean,
+.token.number,
+.token.constant,
+.token.symbol,
+.token.deleted {
+    color: #905;
   }
 
   .token.selector,
@@ -143,47 +154,123 @@
   .token.string,
   .token.char,
   .token.inserted {
-    color: #ce9178; /* warm peach for strings */
+    color: #690;
   }
 
   .token.atrule,
   .token.attr-value,
   .token.keyword {
-    color: #c586c0; /* pink for keywords */
+    color: #07a;
   }
 
   .token.function,
   .token.class-name {
-    color: #4fc1ff; /* bright blue for functions/classes */
+    color: #dd4a68;
   }
 
   .token.regex,
   .token.important,
   .token.variable {
-    color: #9cdcfe; /* soft blue for variables */
+    color: #e90;
   }
 
-  .token.deleted {
-    color: #f14c4c; /* red for removed/deleted */
+  .token.operator {
+    color: #a67f59;
   }
 
-  .token.bold {
-    font-weight: bold;
-  }
-
-  .token.italic {
+  .token.parameter {
+    color: #008000;
     font-style: italic;
   }
 
-  .token.entity {
-    cursor: help;
+  .token.builtin {
+    color: #0077aa;
   }
 
   /*
-  |--------------------------------------------------------------------------
-  | Fade-in Animation
-  |--------------------------------------------------------------------------
-  */
+ |--------------------------------------------------------------------------
+ | DARK MODE Syntax Colors (for editable editor)
+ | Your original styles, now wrapped in .dark
+ |--------------------------------------------------------------------------
+ */
+  .dark .token.comment,
+  .dark .token.prolog,
+  .dark .token.doctype,
+  .dark .token.cdata {
+    color: #6a9955 !important; /* green comments */
+    font-style: italic;
+  }
+
+  .dark .token.punctuation {
+    color: #c5c5c5 !important;
+  }
+
+  .dark .token.property,
+  .dark .token.tag,
+  .dark .token.boolean,
+  .dark .token.number,
+  .dark .token.constant,
+  .dark .token.symbol,
+  .dark .token.deleted {
+    color: #b5cea8 !important; /* soft mint */
+  }
+
+  .dark .token.selector,
+  .dark .token.attr-name,
+  .dark .token.string,
+  .dark .token.char,
+  .dark .token.inserted {
+    color: #ce9178 !important; /* peach for strings */
+  }
+
+  .dark .token.atrule,
+  .dark .token.attr-value,
+  .dark .token.keyword {
+    color: #c586c0 !important; /* pink/purple for keywords */
+  }
+
+  .dark .token.function,
+  .dark .token.class-name {
+    color: #4fc1ff !important; /* bright cyan-blue */
+  }
+
+  .dark .token.regex,
+  .dark .token.important,
+  .dark .token.variable {
+    color: #9cdcfe !important; /* light sky blue */
+  }
+
+  .dark .token.operator {
+    color: #d4d4d4 !important;
+  }
+
+  .dark .token.parameter {
+    color: #9cdcfe !important;
+    font-style: italic;
+  }
+
+  .dark .token.builtin {
+    color: #569cd6 !important; /* deep blue for builtins */
+  }
+
+  /* Glow effect for active typing area in the modal editor */
+  .prism-editor-wrapper:focus-within {
+    /* Light mode focus */
+    @apply border-red-500 ring-1 ring-red-500;
+    /* Dark mode focus */
+    @apply dark:shadow-[0_0_12px_rgba(255,0,0,0.3)] dark:border-[rgba(255,0,0,0.4)];
+  }
+
+  /* Slightly more readable code contrast */
+  .dark .prism-editor-wrapper pre {
+    filter: brightness(1.05);
+  }
+
+  /*
+ |--------------------------------------------------------------------------
+ | Fade-in Animation
+ |--------------------------------------------------------------------------
+ */
   @keyframes fadeIn {
     from {
       opacity: 0;
@@ -199,86 +286,3 @@
     animation: fadeIn 0.6s ease-out forwards;
   }
 }
-
-
-  /*
-  |--------------------------------------------------------------------------
-  | Enhanced VS Code Syntax Highlighting (for modal editors too)
-  |--------------------------------------------------------------------------
-  */
-  .prism-editor-wrapper,
-  pre[class*="language-"] {
-    background: #1e1e1e !important;
-    color: #d4d4d4;
-  }
-
-  .token.comment,
-  .token.prolog,
-  .token.doctype,
-  .token.cdata {
-    color: #6a9955 !important; /* green comments */
-    font-style: italic;
-  }
-
-  .token.punctuation {
-    color: #c5c5c5 !important;
-  }
-
-  .token.property,
-  .token.tag,
-  .token.boolean,
-  .token.number,
-  .token.constant,
-  .token.symbol,
-  .token.deleted {
-    color: #b5cea8 !important; /* soft mint */
-  }
-
-  .token.selector,
-  .token.attr-name,
-  .token.string,
-  .token.char,
-  .token.inserted {
-    color: #ce9178 !important; /* peach for strings */
-  }
-
-  .token.atrule,
-  .token.attr-value,
-  .token.keyword {
-    color: #c586c0 !important; /* pink/purple for keywords */
-  }
-
-  .token.function,
-  .token.class-name {
-    color: #4fc1ff !important; /* bright cyan-blue */
-  }
-
-  .token.regex,
-  .token.important,
-  .token.variable {
-    color: #9cdcfe !important; /* light sky blue */
-  }
-
-  .token.operator {
-    color: #d4d4d4 !important;
-  }
-
-  .token.parameter {
-    color: #9cdcfe !important;
-    font-style: italic;
-  }
-
-  .token.builtin {
-    color: #569cd6 !important; /* deep blue for builtins */
-  }
-
-  /* Glow effect for active typing area in the modal editor */
-  .prism-editor-wrapper:focus-within {
-    box-shadow: 0 0 12px rgba(255, 0, 0, 0.3);
-    border-color: rgba(255, 0, 0, 0.4);
-  }
-
-  /* Slightly more readable code contrast */
-  .prism-editor-wrapper pre {
-    filter: brightness(1.05);
-  }

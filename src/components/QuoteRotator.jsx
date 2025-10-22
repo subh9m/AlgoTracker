@@ -62,15 +62,15 @@ const QuoteRotator = ({ quotes, duration }) => {
     const currentQuote = quotes[index];
 
     return (
-        <section ref={rotatorRef} className="text-center py-20 px-6 md:px-10 border-t border-b border-border-color my-20">
+        <section ref={rotatorRef} className="text-center py-20 px-6 md:px-10 border-t border-b border-gray-200 dark:border-border-color my-20">
             <div className={`max-w-4xl mx-auto transition-all duration-500 ${isFading ? 'quote-fade-out' : 'quote-fade-in'}`}>
-                <blockquote className="text-2xl md:text-3xl font-light leading-snug text-white mb-6">
+                <blockquote className="text-2xl md:text-3xl font-light leading-snug text-gray-900 dark:text-white mb-6">
                     "{currentQuote.text}"
                 </blockquote>
                 <div className="text-sm font-semibold tracking-widest text-red-500">{currentQuote.author}</div>
             </div>
             <div className="max-w-2xl mx-auto mt-8">
-                <div className="w-full h-1.5 bg-border-color/30 rounded-full overflow-hidden">
+                <div className="w-full h-1.5 bg-gray-200 dark:bg-border-color/30 rounded-full overflow-hidden">
                     <div className="h-full bg-gradient-to-r from-red-500 to-red-400" style={{ width: `${progress}%`, transition: 'width 150ms linear' }}></div>
                 </div>
                 <input
