@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { foundationalAlgos, advancedAlgos } from "../data";
 import { db } from "../firebase";
@@ -22,6 +22,7 @@ import "prismjs/components/prism-javascript";
 
 const initialFormState = {
   id: null,
+  problemName: "",
   problem: "",
   intuition: "",
   approaches: "",
@@ -31,6 +32,21 @@ const initialFormState = {
   difficulty: "medium",
   createdAt: null,
 };
+
+// 1. NEW: TOGGLE SWITCH COMPONENT
+// A simple, styled checkbox to act as a toggle
+const ToggleSwitch = ({ label, isChecked, onChange }) => (
+  <label className="toggle-switch-control">
+    <span className="toggle-switch-label">{label}</span>
+    <input
+      type="checkbox"
+      checked={isChecked}
+      onChange={onChange}
+      className="toggle-switch-checkbox"
+    />
+    <span className="toggle-switch-slider"></span>
+  </label>
+);
 
 const QuestionItem = React.memo(
   ({ q, index, onEdit, onRemove, dragHandleProps }) => {
@@ -88,7 +104,7 @@ const QuestionItem = React.memo(
               className={`font-medium text-gray-900 dark:text-gray-100 truncate 
                 hover:text-red-400 transition-colors duration-300`}
             >
-              {q.problem}
+              {q.problemName || q.problem}
             </span>
           </div>
 
@@ -129,6 +145,12 @@ const AlgorithmPage = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [formData, setFormData] = useState(initialFormState);
   const [modalTitle, setModalTitle] = useState("Add a New Solved Question");
+  const [isEditMode, setIsEditMode] = useState(false);
+
+  // REFS
+  const problemRef = useRef(null);
+  const intuitionRef = useRef(null);
+  const approachesRef = useRef(null);
 
   const fetchQuestions = useCallback(async () => {
     if (!slug) return;
@@ -142,6 +164,24 @@ const AlgorithmPage = () => {
   useEffect(() => {
     fetchQuestions();
   }, [fetchQuestions]);
+
+  // EFFECT TO RESIZE TEXTAREAS ON MODAL OPEN
+  useEffect(() => {
+    if (isModalOpen) {
+      const timer = setTimeout(() => {
+        const resize = (ref) => {
+          if (ref.current) {
+            ref.current.style.height = "auto";
+            ref.current.style.height = ref.current.scrollHeight + "px";
+          }
+        };
+        resize(problemRef);
+        resize(intuitionRef);
+        resize(approachesRef);
+      }, 0);
+      return () => clearTimeout(timer);
+    }
+  }, [isModalOpen, formData]); // Re-run if formData changes (e.g., when opening)
 
   const updateAndSaveChanges = async (newQuestionsList) => {
     setQuestions(newQuestionsList);
@@ -160,8 +200,10 @@ const AlgorithmPage = () => {
 
   const handleFormSubmit = async (e) => {
     e.preventDefault();
-    if (!formData.problem.trim())
-      return alert("Problem Statement cannot be empty.");
+    if (!isEditMode) return; // Don't submit if in view mode
+
+    if (!formData.problemName.trim())
+      return alert("Problem Name cannot be empty.");
 
     const updatedQuestions = formData.id
       ? questions.map((q) => (q.id === formData.id ? formData : q))
@@ -171,6 +213,7 @@ const AlgorithmPage = () => {
         ];
 
     setIsModalOpen(false);
+    setIsEditMode(false); // Reset edit mode
     await updateAndSaveChanges(updatedQuestions);
   };
 
@@ -181,34 +224,50 @@ const AlgorithmPage = () => {
     await updateAndSaveChanges(updatedQuestions);
   };
 
+  // UPDATED Add HANDLER
   const handleOpenAddModal = () => {
     setFormData(initialFormState);
     setModalTitle("Add a New Solved Question");
+    setIsEditMode(true); // Always edit for a new question
     setIsModalOpen(true);
   };
 
+  // UPDATED Edit HANDLER
   const handleOpenEditModal = (questionToEdit) => {
     setFormData(questionToEdit);
-    setModalTitle("Edit Solved Question");
+    setModalTitle("View Solved Question"); // Default to view
+    setIsEditMode(false); // Start in view mode
     setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setIsEditMode(false); // Always reset edit mode on close
+  };
+
+  // HANDLER FOR THE TOGGLE SWITCH
+  const handleToggleEditMode = (e) => {
+    const newEditMode = e.target.checked;
+    setIsEditMode(newEditMode);
+    if (newEditMode) {
+      setModalTitle("Edit Solved Question");
+    } else {
+      setModalTitle("View Solved Question");
+    }
   };
 
   const handleInputChange = (e) => {
     setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
-  // --- NEW HANDLER FOR CODE EDITOR ---
   const handleEditorChange = (code) => {
     setFormData((prev) => ({ ...prev, solution: code }));
   };
-  // --- END NEW HANDLER ---
 
-  // 🆕 --- AUTO RESIZE TEXTAREA HELPER ---
   const autoResize = (e) => {
     e.target.style.height = "auto";
     e.target.style.height = e.target.scrollHeight + "px";
   };
-  // 🆕 --- END AUTO RESIZE ---
 
   const handleDragEnd = async (result) => {
     if (!result.destination) return;
@@ -283,7 +342,7 @@ const AlgorithmPage = () => {
               </h2>
               {sec.pre ? (
                 <SyntaxHighlighter
-                  key={theme} 
+                  key={theme}
                   language="javascript"
                   style={theme === "dark" ? vscDarkPlus : coy}
                   customStyle={{
@@ -387,12 +446,39 @@ const AlgorithmPage = () => {
       {/* --- MODAL --- */}
       <Modal
         isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        onClose={handleCloseModal}
         title={modalTitle}
         className="max-w-7xl"
       >
         <form onSubmit={handleFormSubmit} className="space-y-6">
-          {/* 🆕 AUTO-RESIZE TEXTAREAS */}
+          {/* ADDED TOGGLE SWITCH */}
+          {/* Only show toggle if it's an existing question (it has an id) */}
+          {formData.id && (
+            <div className="flex justify-end pb-4 border-b border-gray-200 dark:border-[#333]">
+              <ToggleSwitch
+                label="Edit Mode"
+                isChecked={isEditMode}
+                onChange={handleToggleEditMode}
+              />
+            </div>
+          )}
+
+          <div className="form-group">
+            <label className="form-label" htmlFor="problemName">
+              Problem Name
+            </label>
+            <input
+              id="problemName"
+              name="problemName"
+              type="text"
+              value={formData.problemName}
+              onChange={handleInputChange}
+              className="form-input"
+              placeholder="e.g., Two Sum"
+              disabled={!isEditMode}
+            />
+          </div>
+
           <div className="form-group">
             <label className="form-label" htmlFor="problem">
               Problem Statement
@@ -400,6 +486,7 @@ const AlgorithmPage = () => {
             <textarea
               id="problem"
               name="problem"
+              ref={problemRef}
               value={formData.problem}
               onChange={(e) => {
                 handleInputChange(e);
@@ -407,6 +494,7 @@ const AlgorithmPage = () => {
               }}
               className="form-textarea"
               rows={1}
+              disabled={!isEditMode}
             />
           </div>
 
@@ -417,6 +505,7 @@ const AlgorithmPage = () => {
             <textarea
               id="intuition"
               name="intuition"
+              ref={intuitionRef}
               value={formData.intuition}
               onChange={(e) => {
                 handleInputChange(e);
@@ -424,6 +513,7 @@ const AlgorithmPage = () => {
               }}
               className="form-textarea"
               rows={1}
+              disabled={!isEditMode}
             />
           </div>
 
@@ -434,6 +524,7 @@ const AlgorithmPage = () => {
             <textarea
               id="approaches"
               name="approaches"
+              ref={approachesRef}
               value={formData.approaches}
               onChange={(e) => {
                 handleInputChange(e);
@@ -441,6 +532,7 @@ const AlgorithmPage = () => {
               }}
               className="form-textarea"
               rows={1}
+              disabled={!isEditMode}
             />
           </div>
 
@@ -454,7 +546,10 @@ const AlgorithmPage = () => {
               onValueChange={handleEditorChange}
               highlight={(code) => highlight(code, languages.js, "js")}
               padding={16}
-              className="form-input prism-editor-wrapper"
+              readOnly={!isEditMode}
+              className={`form-input prism-editor-wrapper ${
+                !isEditMode ? "prism-editor-readonly" : ""
+              }`}
               textareaId="solution"
               style={{
                 minHeight: "200px",
@@ -473,6 +568,7 @@ const AlgorithmPage = () => {
               value={formData.difficulty}
               onChange={handleInputChange}
               className="form-input"
+              disabled={!isEditMode}
             >
               <option value="easy">Easy</option>
               <option value="medium">Medium</option>
@@ -494,6 +590,7 @@ const AlgorithmPage = () => {
                 onChange={handleInputChange}
                 className="form-input font-mono"
                 placeholder="e.g., O(n)"
+                disabled={!isEditMode}
               />
             </div>
             <div className="form-group flex-1">
@@ -508,19 +605,25 @@ const AlgorithmPage = () => {
                 onChange={handleInputChange}
                 className="form-input font-mono"
                 placeholder="e.g., O(1)"
+                disabled={!isEditMode}
               />
             </div>
           </div>
 
+          {/* SIMPLIFIED MODAL FOOTER */}
           <div className="pt-6 mt-4 border-t border-gray-200 dark:border-[#333] flex justify-end gap-4">
             <button
               type="button"
-              onClick={() => setIsModalOpen(false)}
+              onClick={handleCloseModal}
               className="cancel-btn"
             >
-              Cancel
+              Close
             </button>
-            <button type="submit" className="save-btn">
+            <button
+              type="submit"
+              className="save-btn"
+              disabled={!isEditMode} // Save button is disabled in view mode
+            >
               {formData.id ? "Save Changes" : "Add Question"}
             </button>
           </div>

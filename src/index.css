@@ -286,3 +286,86 @@ html {
     animation: fadeIn 0.6s ease-out forwards;
   }
 }
+
+/* Makes the read-only code editor look disabled */
+.prism-editor-readonly {
+  background-color: #f3f4f6; /* light gray */
+  cursor: not-allowed;
+  opacity: 0.8;
+}
+
+/* Dark mode style for read-only editor */
+.dark .prism-editor-readonly {
+  background-color: #1f2937; /* dark gray */
+}
+
+
+/* --- TOGGLE SWITCH STYLES --- */
+.toggle-switch-control {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  gap: 10px;
+}
+
+.toggle-switch-label {
+  font-size: 0.875rem; /* 14px */
+  font-weight: 500;
+  color: #374151; /* gray-700 */
+}
+.dark .toggle-switch-label {
+  color: #d1d5db; /* gray-300 */
+}
+
+.toggle-switch-checkbox {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.toggle-switch-slider {
+  position: relative;
+  display: block;
+  width: 40px;
+  height: 22px;
+  background-color: #ccc;
+  border-radius: 34px;
+  transition: 0.4s;
+}
+.dark .toggle-switch-slider {
+  background-color: #374151; /* gray-700 */
+}
+
+.toggle-switch-slider:before {
+  position: absolute;
+  content: "";
+  height: 16px;
+  width: 16px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  border-radius: 50%;
+  transition: 0.4s;
+}
+
+.toggle-switch-checkbox:checked + .toggle-switch-slider {
+  background-color: #ef4444; /* red-500 */
+}
+
+.toggle-switch-checkbox:checked + .toggle-switch-slider:before {
+  transform: translateX(18px);
+}
+/* --- END TOGGLE SWITCH --- */
+
+/* --- READ-ONLY EDITOR STYLE --- */
+/* Makes the read-only code editor look disabled */
+.prism-editor-readonly {
+  background-color: #f3f4f6; /* gray-100 */
+  cursor: not-allowed;
+  opacity: 0.8;
+}
+
+/* Dark mode style for read-only editor */
+.dark .prism-editor-readonly {
+  background-color: #1f2937; /* gray-800 */
+}
