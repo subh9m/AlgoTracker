@@ -28,6 +28,7 @@ const initialFormState = {
   approaches: "",
   story: "",
   dryRun: "",
+  edgeCases: "", // 1. ADDED NEW FIELD STATE
   solution: "",
   timeComplexity: "",
   spaceComplexity: "",
@@ -154,6 +155,7 @@ const AlgorithmPage = () => {
   const approachesRef = useRef(null);
   const storyRef = useRef(null);
   const dryRunRef = useRef(null);
+  const edgeCasesRef = useRef(null); // 2. ADDED NEW REF
   const timeComplexityRef = useRef(null);
   const spaceComplexityRef = useRef(null);
 
@@ -195,13 +197,16 @@ const AlgorithmPage = () => {
     }
   };
 
-  // --- UPDATED useEffect (Handles new pairs) ---
+  // --- UPDATED useEffect (Handles new pairs and refs) ---
   useEffect(() => {
     if (isModalOpen) {
       const timer = setTimeout(() => {
         // 1. Resize *un-paired* textareas
         if (dryRunRef.current) {
           autoResize(dryRunRef.current);
+        }
+        if (edgeCasesRef.current) { // 4. RESIZE NEW FIELD
+          autoResize(edgeCasesRef.current);
         }
 
         // 2. Equalize all pairs
@@ -349,7 +354,7 @@ const AlgorithmPage = () => {
     { title: "Sample Code", content: algorithm.code, pre: true },
   ];
 
-  // 1. NEW: Helper string for form field styles
+  // Helper string for form field styles
   const formFieldStyles = `
     hover:border-gray-400 dark:hover:border-gray-500 
     focus:ring-2 focus:ring-red-400 dark:focus:ring-red-500 focus:border-transparent 
@@ -420,7 +425,7 @@ const AlgorithmPage = () => {
         {/* Solved Questions Section */}
         <div className="mt-16 pt-10 border-t border-gray-300 dark:border-[#333]">
           <div className="flex justify-between items-center mb-6">
-            {/* 2. UPDATED: Red heading */}
+            {/* Red heading */}
             <h2 className="text-3xl font-semibold text-red-600 dark:text-red-500 tracking-wider">
               My Solved Questions
             </h2>
@@ -506,7 +511,7 @@ const AlgorithmPage = () => {
             </div>
           )}
 
-          {/* 3. UPDATED: Added group and hover/focus styles */}
+          {/* Problem Name */}
           <div className="form-group group">
             <label
               className="form-label group-hover:text-red-500 dark:group-hover:text-red-400 transition-colors duration-300"
@@ -526,7 +531,7 @@ const AlgorithmPage = () => {
             />
           </div>
 
-          {/* --- NEW LAYOUT: Problem Statement + Intuition --- */}
+          {/* Problem Statement + Intuition */}
           <div className="flex flex-col md:flex-row gap-6">
             <div className="form-group flex-1 group">
               <label
@@ -570,7 +575,7 @@ const AlgorithmPage = () => {
             </div>
           </div>
 
-          {/* --- NEW LAYOUT: Approaches + Story --- */}
+          {/* Approaches + Story */}
           <div className="flex flex-col md:flex-row gap-6">
             <div className="form-group flex-1 group">
               <label
@@ -615,9 +620,9 @@ const AlgorithmPage = () => {
             </div>
           </div>
 
-          {/* --- NEW LAYOUT: Solution (65%) + Dry Run (35%) --- */}
+          {/* Solution (65%) + Right Column (35%) */}
           <div className="flex flex-col md:flex-row gap-6">
-            {/* Solution (65%) - NOW ON LEFT */}
+            {/* Solution (65%) */}
             <div className="form-group flex-1 md:basis-[65%] group">
               <label
                 className="form-label group-hover:text-red-500 dark:group-hover:text-red-400 transition-colors duration-300"
@@ -641,32 +646,61 @@ const AlgorithmPage = () => {
               />
             </div>
 
-            {/* Dry Run (35%) - NOW ON RIGHT */}
-            <div className="form-group flex-1 md:basis-[35%] group">
-              <label
-                className="form-label group-hover:text-red-500 dark:group-hover:text-red-400 transition-colors duration-300"
-                htmlFor="dryRun"
-              >
-                Dry Run Example
-              </label>
-              <textarea
-                id="dryRun"
-                name="dryRun"
-                ref={dryRunRef}
-                value={formData.dryRun}
-                onChange={(e) => {
-                  handleInputChange(e);
-                  autoResize(e); // Uses single resize logic
-                }}
-                className={`form-textarea ${formFieldStyles}`}
-                rows={1}
-                disabled={!isEditMode}
-                placeholder="e.g., 'arr = [1, 2, 3], i=0, j=2...'"
-              />
+            {/* Right Column (35%) - Contains Dry Run and Edge Cases */}
+            {/* 3. UPDATED LAYOUT: Added inner div with space-y-6 */}
+            <div className="flex-1 md:basis-[35%] flex flex-col space-y-6">
+              {/* Dry Run */}
+              <div className="form-group group">
+                <label
+                  className="form-label group-hover:text-red-500 dark:group-hover:text-red-400 transition-colors duration-300"
+                  htmlFor="dryRun"
+                >
+                  Dry Run Example
+                </label>
+                <textarea
+                  id="dryRun"
+                  name="dryRun"
+                  ref={dryRunRef}
+                  value={formData.dryRun}
+                  onChange={(e) => {
+                    handleInputChange(e);
+                    autoResize(e); // Uses single resize logic
+                  }}
+                  className={`form-textarea ${formFieldStyles}`}
+                  rows={1}
+                  disabled={!isEditMode}
+                  placeholder="e.g., 'arr = [1, 2, 3], i=0, j=2...'"
+                />
+              </div>
+
+              {/* 5. ADDED NEW FIELD JSX */}
+              {/* Edge Cases / Constraints */}
+              <div className="form-group group">
+                <label
+                  className="form-label group-hover:text-red-500 dark:group-hover:text-red-400 transition-colors duration-300"
+                  htmlFor="edgeCases"
+                >
+                  Key Data Structures / Edge Cases
+                </label>
+                <textarea
+                  id="edgeCases"
+                  name="edgeCases"
+                  ref={edgeCasesRef}
+                  value={formData.edgeCases}
+                  onChange={(e) => {
+                    handleInputChange(e);
+                    autoResize(e); // Uses single resize logic
+                  }}
+                  className={`form-textarea ${formFieldStyles}`}
+                  rows={1}
+                  disabled={!isEditMode}
+                  placeholder="e.g., 'Empty array, negative numbers, n > 10^5'"
+                />
+              </div>
             </div>
           </div>
 
-          {/* --- Difficulty (Full Width) --- */}
+          {/* Difficulty (Full Width) */}
           <div className="form-group group">
             <label
               className="form-label group-hover:text-red-500 dark:group-hover:text-red-400 transition-colors duration-300"
@@ -689,7 +723,7 @@ const AlgorithmPage = () => {
             </select>
           </div>
 
-          {/* --- Time & Space (50/50) --- */}
+          {/* Time & Space (50/50) */}
           <div className="flex flex-col md:flex-row gap-6">
             <div className="form-group flex-1 group">
               <label
