@@ -26,6 +26,8 @@ const initialFormState = {
   problem: "",
   intuition: "",
   approaches: "",
+  story: "",
+  dryRun: "",
   solution: "",
   timeComplexity: "",
   spaceComplexity: "",
@@ -33,8 +35,7 @@ const initialFormState = {
   createdAt: null,
 };
 
-// 1. NEW: TOGGLE SWITCH COMPONENT
-// A simple, styled checkbox to act as a toggle
+// TOGGLE SWITCH COMPONENT
 const ToggleSwitch = ({ label, isChecked, onChange }) => (
   <label className="toggle-switch-control">
     <span className="toggle-switch-label">{label}</span>
@@ -151,6 +152,10 @@ const AlgorithmPage = () => {
   const problemRef = useRef(null);
   const intuitionRef = useRef(null);
   const approachesRef = useRef(null);
+  const storyRef = useRef(null);
+  const dryRunRef = useRef(null);
+  const timeComplexityRef = useRef(null);
+  const spaceComplexityRef = useRef(null);
 
   const fetchQuestions = useCallback(async () => {
     if (!slug) return;
@@ -165,23 +170,48 @@ const AlgorithmPage = () => {
     fetchQuestions();
   }, [fetchQuestions]);
 
-  // EFFECT TO RESIZE TEXTAREAS ON MODAL OPEN
+  // --- HEIGHT EQUALIZER ---
+  const equalizeHeights = (ref1, ref2) => {
+    const el1 = ref1.current;
+    const el2 = ref2.current;
+
+    if (el1 && el2) {
+      el1.style.height = "auto";
+      el2.style.height = "auto";
+      const height1 = el1.scrollHeight;
+      const height2 = el2.scrollHeight;
+      const maxHeight = Math.max(height1, height2);
+      el1.style.height = `${maxHeight}px`;
+      el2.style.height = `${maxHeight}px`;
+    }
+  };
+
+  // --- AUTO-RESIZE (FOR SINGLE TEXTAREAS) ---
+  const autoResize = (e) => {
+    const target = e.target ? e.target : e;
+    if (target) {
+      target.style.height = "auto";
+      target.style.height = target.scrollHeight + "px";
+    }
+  };
+
+  // --- UPDATED useEffect (Handles new pairs) ---
   useEffect(() => {
     if (isModalOpen) {
       const timer = setTimeout(() => {
-        const resize = (ref) => {
-          if (ref.current) {
-            ref.current.style.height = "auto";
-            ref.current.style.height = ref.current.scrollHeight + "px";
-          }
-        };
-        resize(problemRef);
-        resize(intuitionRef);
-        resize(approachesRef);
-      }, 0);
+        // 1. Resize *un-paired* textareas
+        if (dryRunRef.current) {
+          autoResize(dryRunRef.current);
+        }
+
+        // 2. Equalize all pairs
+        equalizeHeights(problemRef, intuitionRef);
+        equalizeHeights(approachesRef, storyRef);
+        equalizeHeights(timeComplexityRef, spaceComplexityRef);
+      }, 0); // 0ms timeout to run *after* render
       return () => clearTimeout(timer);
     }
-  }, [isModalOpen, formData]); // Re-run if formData changes (e.g., when opening)
+  }, [isModalOpen, formData]); // Re-run if formData changes
 
   const updateAndSaveChanges = async (newQuestionsList) => {
     setQuestions(newQuestionsList);
@@ -200,7 +230,7 @@ const AlgorithmPage = () => {
 
   const handleFormSubmit = async (e) => {
     e.preventDefault();
-    if (!isEditMode) return; // Don't submit if in view mode
+    if (!isEditMode) return;
 
     if (!formData.problemName.trim())
       return alert("Problem Name cannot be empty.");
@@ -213,7 +243,7 @@ const AlgorithmPage = () => {
         ];
 
     setIsModalOpen(false);
-    setIsEditMode(false); // Reset edit mode
+    setIsEditMode(false);
     await updateAndSaveChanges(updatedQuestions);
   };
 
@@ -224,28 +254,25 @@ const AlgorithmPage = () => {
     await updateAndSaveChanges(updatedQuestions);
   };
 
-  // UPDATED Add HANDLER
   const handleOpenAddModal = () => {
     setFormData(initialFormState);
     setModalTitle("Add a New Solved Question");
-    setIsEditMode(true); // Always edit for a new question
+    setIsEditMode(true);
     setIsModalOpen(true);
   };
 
-  // UPDATED Edit HANDLER
   const handleOpenEditModal = (questionToEdit) => {
     setFormData(questionToEdit);
-    setModalTitle("View Solved Question"); // Default to view
-    setIsEditMode(false); // Start in view mode
+    setModalTitle("View Solved Question");
+    setIsEditMode(false);
     setIsModalOpen(true);
   };
 
   const handleCloseModal = () => {
     setIsModalOpen(false);
-    setIsEditMode(false); // Always reset edit mode on close
+    setIsEditMode(false);
   };
 
-  // HANDLER FOR THE TOGGLE SWITCH
   const handleToggleEditMode = (e) => {
     const newEditMode = e.target.checked;
     setIsEditMode(newEditMode);
@@ -256,17 +283,24 @@ const AlgorithmPage = () => {
     }
   };
 
+  // Handler for simple inputs
   const handleInputChange = (e) => {
     setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
-  const handleEditorChange = (code) => {
-    setFormData((prev) => ({ ...prev, solution: code }));
+  // --- Event Handler for Paired Textareas ---
+  const handlePairedTextareaChange = (e, ref1, ref2) => {
+    // 1. Update state
+    setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+
+    // 2. Equalize the pair *after* state update
+    setTimeout(() => {
+      equalizeHeights(ref1, ref2);
+    }, 0);
   };
 
-  const autoResize = (e) => {
-    e.target.style.height = "auto";
-    e.target.style.height = e.target.scrollHeight + "px";
+  const handleEditorChange = (code) => {
+    setFormData((prev) => ({ ...prev, solution: code }));
   };
 
   const handleDragEnd = async (result) => {
@@ -315,6 +349,14 @@ const AlgorithmPage = () => {
     { title: "Sample Code", content: algorithm.code, pre: true },
   ];
 
+  // 1. NEW: Helper string for form field styles
+  const formFieldStyles = `
+    hover:border-gray-400 dark:hover:border-gray-500 
+    focus:ring-2 focus:ring-red-400 dark:focus:ring-red-500 focus:border-transparent 
+    disabled:hover:bg-gray-100 dark:disabled:hover:bg-gray-800 
+    transition-all duration-300
+  `;
+
   return (
     <>
       <div className="max-w-7xl mx-auto pt-24 pb-16 px-6 md:px-10">
@@ -337,6 +379,7 @@ const AlgorithmPage = () => {
         <div className="mt-12 space-y-10">
           {infoSections.map((sec) => (
             <div key={sec.title}>
+              {/* This heading is already red */}
               <h2 className="text-sm font-semibold text-red-500 tracking-widest uppercase mb-3">
                 {sec.title}
               </h2>
@@ -377,7 +420,8 @@ const AlgorithmPage = () => {
         {/* Solved Questions Section */}
         <div className="mt-16 pt-10 border-t border-gray-300 dark:border-[#333]">
           <div className="flex justify-between items-center mb-6">
-            <h2 className="text-3xl font-semibold text-gray-900 dark:text-white tracking-wider">
+            {/* 2. UPDATED: Red heading */}
+            <h2 className="text-3xl font-semibold text-red-600 dark:text-red-500 tracking-wider">
               My Solved Questions
             </h2>
             <button onClick={handleOpenAddModal} className="save-btn">
@@ -452,7 +496,6 @@ const AlgorithmPage = () => {
       >
         <form onSubmit={handleFormSubmit} className="space-y-6">
           {/* ADDED TOGGLE SWITCH */}
-          {/* Only show toggle if it's an existing question (it has an id) */}
           {formData.id && (
             <div className="flex justify-end pb-4 border-b border-gray-200 dark:border-[#333]">
               <ToggleSwitch
@@ -463,8 +506,12 @@ const AlgorithmPage = () => {
             </div>
           )}
 
-          <div className="form-group">
-            <label className="form-label" htmlFor="problemName">
+          {/* 3. UPDATED: Added group and hover/focus styles */}
+          <div className="form-group group">
+            <label
+              className="form-label group-hover:text-red-500 dark:group-hover:text-red-400 transition-colors duration-300"
+              htmlFor="problemName"
+            >
               Problem Name
             </label>
             <input
@@ -473,93 +520,158 @@ const AlgorithmPage = () => {
               type="text"
               value={formData.problemName}
               onChange={handleInputChange}
-              className="form-input"
+              className={`form-input ${formFieldStyles}`}
               placeholder="e.g., Two Sum"
               disabled={!isEditMode}
             />
           </div>
 
-          <div className="form-group">
-            <label className="form-label" htmlFor="problem">
-              Problem Statement
-            </label>
-            <textarea
-              id="problem"
-              name="problem"
-              ref={problemRef}
-              value={formData.problem}
-              onChange={(e) => {
-                handleInputChange(e);
-                autoResize(e);
-              }}
-              className="form-textarea"
-              rows={1}
-              disabled={!isEditMode}
-            />
+          {/* --- NEW LAYOUT: Problem Statement + Intuition --- */}
+          <div className="flex flex-col md:flex-row gap-6">
+            <div className="form-group flex-1 group">
+              <label
+                className="form-label group-hover:text-red-500 dark:group-hover:text-red-400 transition-colors duration-300"
+                htmlFor="problem"
+              >
+                Problem Statement
+              </label>
+              <textarea
+                id="problem"
+                name="problem"
+                ref={problemRef}
+                value={formData.problem}
+                onChange={(e) =>
+                  handlePairedTextareaChange(e, problemRef, intuitionRef)
+                }
+                className={`form-textarea ${formFieldStyles}`}
+                rows={1}
+                disabled={!isEditMode}
+              />
+            </div>
+            <div className="form-group flex-1 group">
+              <label
+                className="form-label group-hover:text-red-500 dark:group-hover:text-red-400 transition-colors duration-300"
+                htmlFor="intuition"
+              >
+                Intuition
+              </label>
+              <textarea
+                id="intuition"
+                name="intuition"
+                ref={intuitionRef}
+                value={formData.intuition}
+                onChange={(e) =>
+                  handlePairedTextareaChange(e, problemRef, intuitionRef)
+                }
+                className={`form-textarea ${formFieldStyles}`}
+                rows={1}
+                disabled={!isEditMode}
+              />
+            </div>
           </div>
 
-          <div className="form-group">
-            <label className="form-label" htmlFor="intuition">
-              Intuition
-            </label>
-            <textarea
-              id="intuition"
-              name="intuition"
-              ref={intuitionRef}
-              value={formData.intuition}
-              onChange={(e) => {
-                handleInputChange(e);
-                autoResize(e);
-              }}
-              className="form-textarea"
-              rows={1}
-              disabled={!isEditMode}
-            />
+          {/* --- NEW LAYOUT: Approaches + Story --- */}
+          <div className="flex flex-col md:flex-row gap-6">
+            <div className="form-group flex-1 group">
+              <label
+                className="form-label group-hover:text-red-500 dark:group-hover:text-red-400 transition-colors duration-300"
+                htmlFor="approaches"
+              >
+                Approaches
+              </label>
+              <textarea
+                id="approaches"
+                name="approaches"
+                ref={approachesRef}
+                value={formData.approaches}
+                onChange={(e) =>
+                  handlePairedTextareaChange(e, approachesRef, storyRef)
+                }
+                className={`form-textarea ${formFieldStyles}`}
+                rows={1}
+                disabled={!isEditMode}
+              />
+            </div>
+            <div className="form-group flex-1 group">
+              <label
+                className="form-label group-hover:text-red-500 dark:group-hover:text-red-400 transition-colors duration-300"
+                htmlFor="story"
+              >
+                Story / Analogy
+              </label>
+              <textarea
+                id="story"
+                name="story"
+                ref={storyRef}
+                value={formData.story}
+                onChange={(e) =>
+                  handlePairedTextareaChange(e, approachesRef, storyRef)
+                }
+                className={`form-textarea ${formFieldStyles}`}
+                rows={1}
+                disabled={!isEditMode}
+                placeholder="e.g., 'Imagine this as a filing cabinet...'"
+              />
+            </div>
           </div>
 
-          <div className="form-group">
-            <label className="form-label" htmlFor="approaches">
-              Approaches
-            </label>
-            <textarea
-              id="approaches"
-              name="approaches"
-              ref={approachesRef}
-              value={formData.approaches}
-              onChange={(e) => {
-                handleInputChange(e);
-                autoResize(e);
-              }}
-              className="form-textarea"
-              rows={1}
-              disabled={!isEditMode}
-            />
+          {/* --- NEW LAYOUT: Solution (65%) + Dry Run (35%) --- */}
+          <div className="flex flex-col md:flex-row gap-6">
+            {/* Solution (65%) - NOW ON LEFT */}
+            <div className="form-group flex-1 md:basis-[65%] group">
+              <label
+                className="form-label group-hover:text-red-500 dark:group-hover:text-red-400 transition-colors duration-300"
+                htmlFor="solution"
+              >
+                Solution (Code)
+              </label>
+              <Editor
+                value={formData.solution}
+                onValueChange={handleEditorChange}
+                highlight={(code) => highlight(code, languages.js, "js")}
+                padding={16}
+                readOnly={!isEditMode}
+                className={`form-input prism-editor-wrapper ${formFieldStyles} ${
+                  !isEditMode ? "prism-editor-readonly" : ""
+                }`}
+                textareaId="solution"
+                style={{
+                  minHeight: "200px",
+                }}
+              />
+            </div>
+
+            {/* Dry Run (35%) - NOW ON RIGHT */}
+            <div className="form-group flex-1 md:basis-[35%] group">
+              <label
+                className="form-label group-hover:text-red-500 dark:group-hover:text-red-400 transition-colors duration-300"
+                htmlFor="dryRun"
+              >
+                Dry Run Example
+              </label>
+              <textarea
+                id="dryRun"
+                name="dryRun"
+                ref={dryRunRef}
+                value={formData.dryRun}
+                onChange={(e) => {
+                  handleInputChange(e);
+                  autoResize(e); // Uses single resize logic
+                }}
+                className={`form-textarea ${formFieldStyles}`}
+                rows={1}
+                disabled={!isEditMode}
+                placeholder="e.g., 'arr = [1, 2, 3], i=0, j=2...'"
+              />
+            </div>
           </div>
 
-          {/* --- SOLUTION CODE BLOCK --- */}
-          <div className="form-group">
-            <label className="form-label" htmlFor="solution">
-              Solution (Code)
-            </label>
-            <Editor
-              value={formData.solution}
-              onValueChange={handleEditorChange}
-              highlight={(code) => highlight(code, languages.js, "js")}
-              padding={16}
-              readOnly={!isEditMode}
-              className={`form-input prism-editor-wrapper ${
-                !isEditMode ? "prism-editor-readonly" : ""
-              }`}
-              textareaId="solution"
-              style={{
-                minHeight: "200px",
-              }}
-            />
-          </div>
-          {/* --- END SOLUTION --- */}
-
-          <div className="form-group">
-            <label className="form-label" htmlFor="difficulty">
+          {/* --- Difficulty (Full Width) --- */}
+          <div className="form-group group">
+            <label
+              className="form-label group-hover:text-red-500 dark:group-hover:text-red-400 transition-colors duration-300"
+              htmlFor="difficulty"
+            >
               Difficulty
             </label>
             <select
@@ -567,7 +679,7 @@ const AlgorithmPage = () => {
               name="difficulty"
               value={formData.difficulty}
               onChange={handleInputChange}
-              className="form-input"
+              className={`form-input ${formFieldStyles}`}
               disabled={!isEditMode}
             >
               <option value="easy">Easy</option>
@@ -577,33 +689,54 @@ const AlgorithmPage = () => {
             </select>
           </div>
 
+          {/* --- Time & Space (50/50) --- */}
           <div className="flex flex-col md:flex-row gap-6">
-            <div className="form-group flex-1">
-              <label className="form-label" htmlFor="timeComplexity">
+            <div className="form-group flex-1 group">
+              <label
+                className="form-label group-hover:text-red-500 dark:group-hover:text-red-400 transition-colors duration-300"
+                htmlFor="timeComplexity"
+              >
                 Time Complexity
               </label>
-              <input
+              <textarea
                 id="timeComplexity"
                 name="timeComplexity"
-                type="text"
+                ref={timeComplexityRef}
                 value={formData.timeComplexity}
-                onChange={handleInputChange}
-                className="form-input font-mono"
+                onChange={(e) =>
+                  handlePairedTextareaChange(
+                    e,
+                    timeComplexityRef,
+                    spaceComplexityRef
+                  )
+                }
+                className={`form-textarea font-mono ${formFieldStyles}`}
+                rows={1}
                 placeholder="e.g., O(n)"
                 disabled={!isEditMode}
               />
             </div>
-            <div className="form-group flex-1">
-              <label className="form-label" htmlFor="spaceComplexity">
+            <div className="form-group flex-1 group">
+              <label
+                className="form-label group-hover:text-red-500 dark:group-hover:text-red-400 transition-colors duration-300"
+                htmlFor="spaceComplexity"
+              >
                 Space Complexity
               </label>
-              <input
+              <textarea
                 id="spaceComplexity"
                 name="spaceComplexity"
-                type="text"
+                ref={spaceComplexityRef}
                 value={formData.spaceComplexity}
-                onChange={handleInputChange}
-                className="form-input font-mono"
+                onChange={(e) =>
+                  handlePairedTextareaChange(
+                    e,
+                    timeComplexityRef,
+                    spaceComplexityRef
+                  )
+                }
+                className={`form-textarea font-mono ${formFieldStyles}`}
+                rows={1}
                 placeholder="e.g., O(1)"
                 disabled={!isEditMode}
               />
